@@ -39,10 +39,6 @@ python3 -m http.server 8000
 
 Les contrôles sont **indicatifs** et ne remplacent ni la norme NF C 15-100 ni un électricien qualifié.
 
-## Crédits
-
-Idée inspirée du projet [etiquettes-tableau-electrique](https://github.com/qlefevre/etiquettes-tableau-electrique) de qlefevre. Le code et les icônes de ce dépôt sont entièrement réécrits.
-
 ## Licence
 
 MIT — voir [LICENSE](LICENSE).
