@@ -544,6 +544,7 @@ async function decodeShare(hash) {
 
 async function shareLink() {
   const url = location.origin + location.pathname + '#' + await encodeShare();
+  hit('partages');
   try { await navigator.clipboard.writeText(url); toast('Lien copié dans le presse-papiers.'); }
   catch { prompt('Copiez ce lien :', url); }
 }
@@ -676,6 +677,40 @@ function buildPrint() {
 function doPrint() { buildPrint(); window.print(); }
 
 // ---------------------------------------------------------------------------
+// Compteurs anonymes (aucun cookie, aucune donnée du tableau envoyée)
+// ---------------------------------------------------------------------------
+const COUNTER = 'https://abacus.jasoncameron.dev';
+const COUNTER_NS = 'ju2k-etiquettes-tableau';
+const COUNT_ENABLED = location.hostname.endsWith('github.io');
+const stats = {};
+
+async function counter(action, key) {
+  try {
+    const r = await fetch(`${COUNTER}/${action}/${COUNTER_NS}/${key}`);
+    const d = await r.json();
+    if (Number.isFinite(d.value) && d.value >= 0) { stats[key] = d.value; renderStats(); }
+  } catch { /* compteur indisponible : sans importance */ }
+}
+const hit = (key) => (COUNT_ENABLED ? counter('hit', key) : Promise.resolve());
+
+function renderStats() {
+  const fmt = (n) => n.toLocaleString('fr-FR');
+  const parts = [];
+  if (stats.visites != null) parts.push(`${fmt(stats.visites)} visite${stats.visites > 1 ? 's' : ''}`);
+  if (stats.impressions != null) parts.push(`${fmt(stats.impressions)} impression${stats.impressions > 1 ? 's' : ''}`);
+  if (stats.partages != null) parts.push(`${fmt(stats.partages)} lien${stats.partages > 1 ? 's' : ''} partagé${stats.partages > 1 ? 's' : ''}`);
+  $('#stats').textContent = parts.join(' · ');
+}
+
+function loadStats() {
+  let first = false;
+  try { first = !sessionStorage.getItem('etq.visited'); sessionStorage.setItem('etq.visited', '1'); } catch { first = false; }
+  if (first && COUNT_ENABLED) hit('visites'); else counter('get', 'visites');
+  counter('get', 'impressions');
+  counter('get', 'partages');
+}
+
+// ---------------------------------------------------------------------------
 // Divers
 // ---------------------------------------------------------------------------
 let toastTimer;
@@ -782,7 +817,7 @@ function init() {
     toast('Thème : ' + { auto: 'automatique', dark: 'sombre', light: 'clair' }[ui.theme]);
   });
 
-  window.addEventListener('beforeprint', buildPrint);
+  window.addEventListener('beforeprint', () => { buildPrint(); hit('impressions'); });
   document.addEventListener('keydown', (e) => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? redo() : undo(); }
@@ -816,6 +851,7 @@ async function boot() {
     if (saved && Array.isArray(saved.rows)) loadState(saved); else loadState(TEMPLATES[0].build());
   }
   if (!storedUi?.zoom) fitZoom();
+  loadStats();
 }
 
 // Zoom initial : la rangée la plus large tient dans la largeur disponible.
