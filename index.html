@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Étiquettes tableau électrique</title>
+  <meta name="description" content="Créez et imprimez à l'échelle les étiquettes de votre tableau électrique : icônes, repères, calibres, couleurs par différentiel, nomenclature et contrôles NF C 15-100.">
+  <meta name="author" content="jU2k">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2L4 14h7l-1 8 9-12h-7z' fill='%23f59e0b' stroke='%23000' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <style id="page-style">@page{size:A4 landscape;margin:10mm}</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+      <input id="doc-title" aria-label="Nom du tableau" maxlength="60">
+    </div>
+    <nav class="tools">
+      <button id="btn-new" title="Nouveau tableau / modèles">Nouveau</button>
+      <button id="btn-saved" title="Tableaux enregistrés dans ce navigateur">Mes tableaux</button>
+      <span class="sep"></span>
+      <button id="btn-undo" class="icon-btn" title="Annuler (Ctrl+Z)" disabled>↶</button>
+      <button id="btn-redo" class="icon-btn" title="Rétablir (Ctrl+Y)" disabled>↷</button>
+      <span class="sep"></span>
+      <button id="btn-share" title="Copier un lien contenant tout le tableau">Lien de partage</button>
+      <button id="btn-print" class="primary" title="Imprimer à l'échelle (Ctrl+P)">Imprimer</button>
+      <button id="btn-theme" class="icon-btn" title="Thème clair / sombre / auto">◐</button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <aside class="side">
+      <details open>
+        <summary>Format des étiquettes</summary>
+        <div class="two">
+          <label>Largeur d'un module (mm)
+            <input type="number" data-setting="pitch" min="10" max="30" step="0.1">
+          </label>
+          <label>Hauteur (mm)
+            <input type="number" data-setting="height" min="8" max="80" step="0.5">
+          </label>
+        </div>
+        <p class="hint">Module DIN standard : 17,5 mm (pas de 18 mm sur la plupart des tableaux). Mesurez la fenêtre du capot.</p>
+        <div class="two">
+          <label>Échelle d'impression (%)
+            <input type="number" data-setting="scale" min="50" max="150" step="0.5">
+          </label>
+          <label>Orientation
+            <select data-setting="orientation">
+              <option value="auto">Automatique</option>
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Paysage</option>
+            </select>
+          </label>
+        </div>
+        <label>Couleurs
+          <select data-setting="colorMode">
+            <option value="band">Bandeau de couleur</option>
+            <option value="fill">Fond teinté</option>
+            <option value="none">Noir et blanc</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" data-setting="autoColor"> Couleur automatique par différentiel</label>
+        <label class="check"><input type="checkbox" data-setting="showIcon"> Icônes</label>
+        <label class="check"><input type="checkbox" data-setting="showLocation"> Emplacement / pièce</label>
+        <label class="check"><input type="checkbox" data-setting="showRepere"> Repères (Q1, ID1…)</label>
+        <label class="check"><input type="checkbox" data-setting="showCalibre"> Calibres</label>
+        <label class="check"><input type="checkbox" data-setting="separators"> Traits de séparation</label>
+      </details>
+      <details>
+        <summary>Impression</summary>
+        <label class="check"><input type="checkbox" data-setting="printTitle"> Titre du tableau</label>
+        <label class="check"><input type="checkbox" data-setting="printRuler"> Barre de contrôle d'échelle</label>
+        <label class="check"><input type="checkbox" data-setting="printNomenclature"> Nomenclature des circuits</label>
+        <p class="hint">Dans la boîte d'impression, choisissez « Taille réelle » / « 100 % » (pas « Ajuster »). Les rangées trop longues sont coupées en deux morceaux à raccorder.</p>
+      </details>
+      <details>
+        <summary>Fichiers</summary>
+        <div class="stack">
+          <button id="btn-save">Enregistrer dans ce navigateur</button>
+          <button id="btn-export">Exporter (.json)</button>
+          <button id="btn-import">Importer (.json)</button>
+          <button id="btn-csv">Exporter la nomenclature (.csv)</button>
+          <button id="btn-number">Numéroter les repères</button>
+        </div>
+        <input type="file" id="file-import" accept=".json,application/json" hidden>
+      </details>
+      <details open>
+        <summary>Contrôles <span id="checks-count" class="badge ok">✓</span></summary>
+        <ul id="checks" class="checks"></ul>
+        <p class="hint">Indicatif, d'après la NF C 15-100. Ne remplace pas la norme ni un électricien.</p>
+      </details>
+    </aside>
+
+    <section class="work">
+      <div class="work-bar">
+        <label class="zoom">Zoom <input type="range" id="zoom" min="40" max="200" step="10"> <span id="zoom-val"></span></label>
+        <span class="spacer"></span>
+        <button id="btn-add-row">+ Ajouter une rangée</button>
+      </div>
+      <div id="panel" class="panel"></div>
+    </section>
+
+    <aside class="side props" id="props"></aside>
+  </main>
+
+  <dialog id="dlg-templates">
+    <header><h2>Nouveau tableau</h2><button class="icon-btn" data-close aria-label="Fermer">✕</button></header>
+    <ul id="tpl-list" class="tpl-list"></ul>
+  </dialog>
+
+  <dialog id="dlg-saved">
+    <header><h2>Mes tableaux</h2><button class="icon-btn" data-close aria-label="Fermer">✕</button></header>
+    <p class="hint">Enregistrés uniquement dans ce navigateur. Pour les garder ailleurs, utilisez l'export .json ou le lien de partage.</p>
+    <ul id="saved-list" class="saved-list"></ul>
+  </dialog>
+
+  <datalist id="dl-calibres"></datalist>
+  <datalist id="dl-locations"></datalist>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="print" aria-hidden="true"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
