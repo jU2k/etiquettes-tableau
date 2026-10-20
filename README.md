@@ -6,6 +6,8 @@ Application web, sans installation ni compte, pour créer et **imprimer à l'éc
 
 Auteur : jU2k
 
+![Aperçu de l'éditeur](docs/apercu.png)
+
 ## Fonctionnalités
 
 - **Éditeur visuel** : rangées de 13, 18 modules ou plus, modules de 1 à 6 de large, glisser-déposer (y compris d'une rangée à l'autre), annuler / rétablir.
